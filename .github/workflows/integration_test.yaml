@@ -23,4 +23,10 @@ jobs:
     - uses: subosito/flutter-action@v1
       with:
         channel: stable
-    - run: flutter drive --target=test_driver/app.dart
+    - name: "Run test"
+      run: | 
+        flutter pub get
+        cd ios
+        pod install
+        cd ..
+        flutter drive --target=test_driver/app.dart
