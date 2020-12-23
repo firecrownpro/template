@@ -1,0 +1,31 @@
+name:  Run integration tests
+on: [push, pull_request]
+jobs:
+  integration_test:
+    name: Integration test
+    strategy:
+      matrix:
+        device:
+        - "iPhone 11 Pro Max"
+      fail-fast: false
+    runs-on: macOS-latest
+    steps:
+    - name: "List all simulators"
+      run: xcrun simctl list "devices" "${{ matrix.device }}"
+    - name: "Start Simulator"
+      run: |
+        UDID=$(
+          xcrun simctl list "devices" "${{ matrix.device }}" | grep "${{ matrix.device }} (" -m 1 | awk '{gsub(/\(/, "", $(NF-1)); gsub(/\)/, "", $(NF-1)); print $(NF-1)}'
+        )
+
+        xcrun simctl boot "${UDID:?No Simulator with this name found}"
+    - uses: actions/checkout@master
+    - uses: subosito/flutter-action@v1
+      with:
+        channel: stable
+    - name: Setup pod correctly
+      working-directory: ./ios
+      run: | 
+        pod install
+        pod update
+    - run: flutter drive --target=test_driver/app.dart
